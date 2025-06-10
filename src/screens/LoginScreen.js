@@ -52,7 +52,7 @@ const LoginScreen = ({ navigation }) => {
 
             <Button
                 mode="contained"
-                onPress={() => console.log('Login pressionado')}
+                onPress={() => navigation.replace('MainApp')}
                 style={styles.button}
                 labelStyle={styles.buttonLabel}
             >
