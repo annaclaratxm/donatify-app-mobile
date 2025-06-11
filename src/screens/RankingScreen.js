@@ -1,8 +1,7 @@
-// src/screens/RankingScreen.js
 
 import React from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import RankingItem from '../components/RankingItem';
 
 // Dados fictícios para o ranking
@@ -22,25 +21,24 @@ const rankingData = [
 const RankingScreen = () => {
     return (
         <View style={styles.container}>
-            <Text variant="titleLarge" style={styles.mainTitle}>Ranking de Voluntários</Text>
-            <Card style={styles.card}>
-                <Card.Content>
-                    <Text variant="titleMedium" style={styles.cardTitle}>Top Voluntários</Text>
-                    <Text style={styles.cardSubtitle}>Os voluntários com mais pontos da comunidade</Text>
-                    <FlatList
-                        data={rankingData}
-                        keyExtractor={(item) => item.rank.toString()}
-                        renderItem={({ item }) => (
-                            <RankingItem
-                                rank={item.rank}
-                                name={item.name}
-                                points={item.points}
-                            />
-                        )}
-                        style={styles.list}
+            <FlatList
+                data={rankingData}
+                keyExtractor={(item) => item.rank.toString()}
+                ListHeaderComponent={ 
+                    <>
+                        <Text variant="titleLarge" style={styles.mainTitle}>Ranking de Voluntários</Text>
+                        <Text style={styles.subtitle}>Os voluntários com mais pontos da comunidade</Text>
+                    </>
+                }
+                renderItem={({ item }) => (
+                    <RankingItem
+                        rank={item.rank}
+                        name={item.name}
+                        points={item.points}
                     />
-                </Card.Content>
-            </Card>
+                )}
+                contentContainerStyle={styles.listContent}
+            />
         </View>
     );
 };
@@ -50,27 +48,19 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f5f5f5',
     },
+    listContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+    },
     mainTitle: {
         fontWeight: 'bold',
-        margin: 16,
-        marginBottom: 8,
+        marginTop: 16,
+        marginBottom: 4,
     },
-    card: {
-        flex: 1,
-        marginHorizontal: 16,
-        marginBottom: 16,
-        backgroundColor: '#fff',
-    },
-    cardTitle: {
-        fontWeight: 'bold',
-    },
-    cardSubtitle: {
+    subtitle: {
         color: '#666',
-        marginBottom: 16,
+        marginBottom: 24, 
     },
-    list: {
-        marginTop: 8,
-    }
 });
 
 export default RankingScreen;

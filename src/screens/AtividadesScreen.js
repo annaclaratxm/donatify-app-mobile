@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, Searchbar } from 'react-native-paper'; 
 import ActivityCard from '../components/ActivityCard';
 
-// Dados fictícios
+// Dados fictícios 
 const availableActivities = [
     {
         id: '1',
@@ -30,6 +30,8 @@ const availableActivities = [
 ];
 
 const AtividadesScreen = ({ navigation }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+
     const handleParticipar = (activity) => {
         navigation.navigate('ActivityDetail', { activityId: activity.id });
     };
@@ -37,6 +39,14 @@ const AtividadesScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <Text variant="titleLarge" style={styles.title}>Atividades Disponíveis</Text>
+
+            <Searchbar
+                placeholder="Pesquisar"
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                style={styles.searchbar}
+            />
+
             <FlatList
                 data={availableActivities}
                 renderItem={({ item }) => (
@@ -46,7 +56,6 @@ const AtividadesScreen = ({ navigation }) => {
                     />
                 )}
                 keyExtractor={item => item.id}
-                numColumns={2}
                 contentContainerStyle={styles.list}
             />
         </View>
@@ -60,11 +69,18 @@ const styles = StyleSheet.create({
     },
     title: {
         fontWeight: 'bold',
-        margin: 16,
-        marginBottom: 0,
+        marginHorizontal: 16,
+        marginTop: 16,
+    },
+    searchbar: {
+        marginHorizontal: 16,
+        marginTop: 16,
+        marginBottom: 8,
+        backgroundColor: '#fff',
     },
     list: {
         paddingHorizontal: 8,
+        paddingBottom: 8,
     }
 });
 
