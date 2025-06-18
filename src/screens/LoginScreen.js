@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
+import { login } from '../services/authService';
 
 const logo = require('../assets/logo.png');
 
@@ -8,64 +9,91 @@ const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Erro', 'Por favor, preencha o e-mail e a senha.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await login(email, password); 
+            navigation.replace('MainApp');
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Erro no Login', 'E-mail ou senha inválidos. Por favor, tente novamente.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
-        <View style={styles.container}>
-            <Image source={logo} style={styles.logo} />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <View style={styles.container}>
+                <Image source={logo} style={styles.logo} />
 
-            <Text variant="headlineLarge" style={styles.title}>
-                Donatify
-            </Text>
+                <Text variant="headlineLarge" style={styles.title}>
+                    Donatify
+                </Text>
 
-            <Text variant="bodyLarge" style={styles.subtitle}>
-                Faça a diferença e ganhe pontos
-            </Text>
+                <Text variant="bodyLarge" style={styles.subtitle}>
+                    Faça a diferença e ganhe pontos
+                </Text>
 
-            <TextInput
-                label="E-mail"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                mode="outlined"
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
+                <TextInput
+                    label="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    style={styles.input}
+                    mode="outlined"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    disabled={isLoading}
+                />
 
-            <TextInput
-                label="Senha"
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                mode="outlined"
-                secureTextEntry={!isPasswordVisible} 
-                right={
-                    <TextInput.Icon
-                        icon={isPasswordVisible ? 'eye-off' : 'eye'}
-                        onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                    />
-                }
-            />
+                <TextInput
+                    label="Senha"
+                    value={password}
+                    onChangeText={setPassword}
+                    style={styles.input}
+                    mode="outlined"
+                    secureTextEntry={!isPasswordVisible}
+                    disabled={isLoading}
+                    right={
+                        <TextInput.Icon
+                            icon={isPasswordVisible ? 'eye-off' : 'eye'}
+                            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                        />
+                    }
+                />
 
-            <TouchableOpacity onPress={() => console.log('Clicou em Esqueceu a senha')}>
-                <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
-            </TouchableOpacity>
-
-            <Button
-                mode="contained"
-                onPress={() => navigation.replace('MainApp')}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-            >
-                Entrar
-            </Button>
-
-            <View style={styles.signupContainer}>
-                <Text>Não tem uma conta? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                    <Text style={styles.signupLink}>Cadastre-se aqui!</Text>
+                <TouchableOpacity onPress={() => console.log('Clicou em Esqueceu a senha')} disabled={isLoading}>
+                    <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
                 </TouchableOpacity>
+
+                <Button
+                    mode="contained"
+                    onPress={handleLogin}
+                    style={styles.button}
+                    labelStyle={styles.buttonLabel}
+                    disabled={isLoading}
+                >
+                    {isLoading ? <ActivityIndicator animating={true} color="#fff" /> : 'Entrar'}
+                </Button>
+
+                <View style={styles.signupContainer}>
+                    <Text>Não tem uma conta? </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('SignUp')} disabled={isLoading}>
+                        <Text style={styles.signupLink}>Cadastre-se aqui!</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -104,8 +132,8 @@ const styles = StyleSheet.create({
     button: {
         width: '100%',
         paddingVertical: 8,
-        backgroundColor: '#3D8B6D', 
-        borderRadius: 50, 
+        backgroundColor: '#3D8B6D',
+        borderRadius: 50,
     },
     buttonLabel: {
         fontSize: 16,
@@ -120,5 +148,6 @@ const styles = StyleSheet.create({
         color: '#3D8B6D',
     },
 });
+
 
 export default LoginScreen;

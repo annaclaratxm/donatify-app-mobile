@@ -1,14 +1,22 @@
+
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Text, Chip, Button, Icon } from 'react-native-paper';
 
-const ActivityCard = ({ activity, onParticipar }) => {
-    const categoryColor = activity.category === 'doação' ? '#A020F0' : '#2979FF';
+const ActivityCard = ({ activity, onParticipar, isEnrolled }) => {
+    const categoryColor = activity.type === 'donation' ? '#A020F0' : '#2979FF'; 
+    const categoryLabel = activity.type === 'donation' ? 'doação' : activity.type; 
+
+    // Formata as datas que vêm da API
+    const formattedStartDate = new Date(activity.startDate).toLocaleDateString('pt-BR');
+    const formattedStartTime = new Date(activity.startDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const formattedEndTime = new Date(activity.endDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
 
     return (
         <Card style={styles.card}>
             <View style={styles.topRow}>
-                <Chip style={[styles.chip, { backgroundColor: categoryColor }]} textStyle={styles.chipText}>{activity.category}</Chip>
+                <Chip style={[styles.chip, { backgroundColor: categoryColor }]} textStyle={styles.chipText}>{categoryLabel}</Chip>
                 <View style={styles.statusRow}>
                     <Icon source="check-circle" color="#34C759" size={16} />
                     <Chip style={[styles.chip, styles.activeChip]} textStyle={[styles.chipText, styles.activeChipText]}>
@@ -23,16 +31,16 @@ const ActivityCard = ({ activity, onParticipar }) => {
 
                 <View style={styles.pointsContainer}>
                     <Icon source="flag-outline" size={24} color="#3D8B6D" />
-                    <Text style={styles.pointsText}>{activity.points} pontos</Text>
+                    <Text style={styles.pointsText}>{activity.pointsValue} pontos</Text>
                 </View>
 
                 <View style={styles.detailRow}>
                     <Icon source="calendar-blank-outline" size={20} color="#666" />
-                    <Text style={styles.detailText}>{activity.date}</Text>
+                    <Text style={styles.detailText}>{formattedStartDate}</Text>
                 </View>
                 <View style={styles.detailRow}>
                     <Icon source="clock-outline" size={20} color="#666" />
-                    <Text style={styles.detailText}>{activity.time}</Text>
+                    <Text style={styles.detailText}>{`${formattedStartTime}h - ${formattedEndTime}h`}</Text>
                 </View>
                 <View style={styles.detailRow}>
                     <Icon source="map-marker-outline" size={20} color="#666" />
@@ -44,10 +52,12 @@ const ActivityCard = ({ activity, onParticipar }) => {
                 <Button
                     mode="contained"
                     onPress={onParticipar}
-                    style={styles.button}
+                    disabled={isEnrolled}
+                    style={[styles.button, isEnrolled && styles.disabledButton]}
                     labelStyle={styles.buttonLabel}
+                    icon={isEnrolled ? 'check' : null} 
                 >
-                    Participar
+                    {isEnrolled ? 'Inscrito' : 'Participar'}
                 </Button>
             </Card.Actions>
         </Card>
@@ -56,7 +66,6 @@ const ActivityCard = ({ activity, onParticipar }) => {
 
 const styles = StyleSheet.create({
     card: {
-        flex: 1,
         margin: 8,
         backgroundColor: '#fff',
         elevation: 2,
@@ -75,6 +84,7 @@ const styles = StyleSheet.create({
         height: 28,
         alignItems: 'center',
         justifyContent: 'center',
+        textTransform: 'capitalize',
     },
     chipText: {
         color: '#fff',
@@ -87,6 +97,7 @@ const styles = StyleSheet.create({
     activeChipText: {
         color: '#34C759',
         fontWeight: 'normal',
+        textTransform: 'capitalize',
     },
     content: {
         paddingTop: 12,
@@ -98,7 +109,7 @@ const styles = StyleSheet.create({
     description: {
         color: '#666',
         marginBottom: 16,
-        minHeight: 50, 
+        minHeight: 40,
     },
     pointsContainer: {
         flexDirection: 'row',
@@ -125,6 +136,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#3D8B6D',
         borderRadius: 8,
         margin: 8,
+    },
+    disabledButton: {
+        backgroundColor: '#A5D6A7', 
     },
     buttonLabel: {
         fontWeight: 'bold',
