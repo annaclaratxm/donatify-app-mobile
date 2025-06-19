@@ -1,30 +1,63 @@
-
-import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Text } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { Text, Card, Button } from 'react-native-paper';
+import { useIsFocused } from '@react-navigation/native';
 import RankingItem from '../components/RankingItem';
-
-// Dados fictícios para o ranking
-const rankingData = [
-    { rank: 1, name: 'Maria Silva', points: '1,250' },
-    { rank: 2, name: 'João Santos', points: '1,100' },
-    { rank: 3, name: 'Ana Costa', points: '950' },
-    { rank: 4, name: 'Pedro Lima', points: '800' },
-    { rank: 5, name: 'Carla Oliveira', points: '750' },
-    { rank: 6, name: 'Gabriel da Silva', points: '725' },
-    { rank: 7, name: 'XXXX', points: 'XXX' },
-    { rank: 8, name: 'XXXX', points: 'XXX' },
-    { rank: 9, name: 'XXXX', points: 'XXX' },
-    { rank: 10, name: 'XXXX', points: 'XXX' },
-];
+import { getRankingList } from '../services/rankingService'; 
 
 const RankingScreen = () => {
+    const [rankingData, setRankingData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const isFocused = useIsFocused();
+
+    // Função para buscar os dados da API
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const data = await getRankingList();
+            setRankingData(data);
+        } catch (e) {
+            setError('Não foi possível carregar o ranking.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isFocused) {
+            fetchData();
+        }
+    }, [isFocused]);
+
+
+    // Renderiza a tela de carregamento
+    if (isLoading) {
+        return (
+            <View style={styles.centerContainer}>
+                <ActivityIndicator animating={true} size="large" />
+            </View>
+        );
+    }
+
+    // Renderiza a tela de erro
+    if (error) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text>{error}</Text>
+                <Button onPress={fetchData} style={{ marginTop: 10 }}>Tentar Novamente</Button>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <FlatList
                 data={rankingData}
                 keyExtractor={(item) => item.rank.toString()}
-                ListHeaderComponent={ 
+                ListHeaderComponent={
                     <>
                         <Text variant="titleLarge" style={styles.mainTitle}>Ranking de Voluntários</Text>
                         <Text style={styles.subtitle}>Os voluntários com mais pontos da comunidade</Text>
@@ -34,9 +67,10 @@ const RankingScreen = () => {
                     <RankingItem
                         rank={item.rank}
                         name={item.name}
-                        points={item.points}
+                        points={item.totalPoints.toString()} 
                     />
                 )}
+                ListEmptyComponent={<Text style={styles.emptyText}>O ranking ainda está vazio.</Text>}
                 contentContainerStyle={styles.listContent}
             />
         </View>
@@ -47,6 +81,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     listContent: {
         paddingHorizontal: 16,
@@ -59,8 +99,13 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         color: '#666',
-        marginBottom: 24, 
+        marginBottom: 24,
     },
+    emptyText: {
+        textAlign: 'center',
+        marginTop: 50,
+        color: '#666',
+    }
 });
 
 export default RankingScreen;

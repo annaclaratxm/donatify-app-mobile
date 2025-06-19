@@ -1,54 +1,40 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Avatar, Text } from 'react-native-paper';
+import { useUser } from '../context/UserContext';
 
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-import MainTabNavigator from './MainTabNavigator'; 
-import ActivityDetailScreen from '../screens/ActivityDetailScreen';
-import ProfileScreen from '../screens/ProfileScreen'; 
+import UserNavigator from './UserNavigator';
+import AdminNavigator from './AdminNavigator'; 
 
 const Stack = createNativeStackNavigator();
-const logo = require('../assets/logo.png');
 
 const AppNavigator = () => {
-    return (
-        <Stack.Navigator initialRouteName="Login">
-            <Stack.Group screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="SignUp" component={SignUpScreen} />
-            </Stack.Group>
+    const { isAuthenticated, user, isLoading } = useUser();
 
-            <Stack.Group 
-                screenOptions={({ navigation }) => ({ 
-                    headerTitle: () => (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Image source={logo} style={{ width: 30, height: 30, marginRight: 10 }}/>
-                        </View>
-                    ),
-                    headerRight: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-                            <Avatar.Image size={32} source={{ uri: 'https://via.placeholder.com/150' }} />
-                        </TouchableOpacity>
-                    ),
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: '#fff' },
-                })}
-            >
-                <Stack.Screen
-                    name="MainApp"
-                    component={MainTabNavigator} 
-                />
-                <Stack.Screen
-                    name="ActivityDetail"
-                    component={ActivityDetailScreen}
-                />
-                <Stack.Screen 
-                    name="Perfil"
-                    component={ProfileScreen}
-                />
-            </Stack.Group>
+    if (isLoading && !user) { 
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" />
+            </View>
+        );
+    }
+
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {isAuthenticated && user ? (
+                user.role === 'ADMIN' ? (
+                    <Stack.Screen name="AdminPanel" component={AdminNavigator} />
+                ) : (
+                    <Stack.Screen name="UserPanel" component={UserNavigator} />
+                )
+            ) : (
+                <Stack.Group>
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                    <Stack.Screen name="SignUp" component={SignUpScreen} />
+                </Stack.Group>
+            )}
         </Stack.Navigator>
     );
 };
