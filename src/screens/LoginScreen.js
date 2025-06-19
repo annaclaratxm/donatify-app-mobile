@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
-import { login } from '../services/authService';
+import { useUser } from '../context/UserContext'; 
 
 const logo = require('../assets/logo.png');
 
 const LoginScreen = ({ navigation }) => {
+    const { login } = useUser(); 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -19,8 +20,8 @@ const LoginScreen = ({ navigation }) => {
 
         setIsLoading(true);
         try {
-            await login(email, password); 
-            navigation.replace('MainApp');
+            await login(email, password);
+
         } catch (error) {
             console.error(error);
             Alert.alert('Erro no Login', 'E-mail ou senha inválidos. Por favor, tente novamente.');
@@ -73,7 +74,7 @@ const LoginScreen = ({ navigation }) => {
                 />
 
                 <TouchableOpacity onPress={() => console.log('Clicou em Esqueceu a senha')} disabled={isLoading}>
-                    <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
+                    <Text style={styles.forgotPassword}>Esqueveu sua senha?</Text>
                 </TouchableOpacity>
 
                 <Button
@@ -148,6 +149,5 @@ const styles = StyleSheet.create({
         color: '#3D8B6D',
     },
 });
-
 
 export default LoginScreen;

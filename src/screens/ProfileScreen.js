@@ -1,44 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Text, Card, Avatar, Button, Chip } from 'react-native-paper';
-import { useIsFocused } from '@react-navigation/native';
+import { useUser } from '../context/UserContext';
 import InfoField from '../components/InfoField';
-import { removeTokenAndEmail } from '../services/storageService';
-import { getUserProfile } from '../services/userService';
 
 const ProfileScreen = ({ navigation }) => {
-    const [userData, setUserData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    const isFocused = useIsFocused();
-
-    const fetchProfile = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const data = await getUserProfile();
-            setUserData(data);
-        } catch (e) {
-            setError('Não foi possível carregar os dados do perfil.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (isFocused) {
-            fetchProfile();
-        }
-    }, [isFocused]);
-
-    const handleLogout = async () => {
-        await removeTokenAndEmail();
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-        });
-    };
+    const { user, logout, isLoading, reloadUser } = useUser();
 
     const confirmLogout = () => {
         Alert.alert(
@@ -46,20 +13,25 @@ const ProfileScreen = ({ navigation }) => {
             "Você tem certeza que deseja sair?",
             [
                 { text: "Cancelar", style: "cancel" },
-                { text: "Sair", onPress: handleLogout, style: "destructive" }
+                { text: "Sair", onPress: logout, style: "destructive" }
             ]
         );
     };
 
-    if (isLoading) {
+    if (isLoading && !user) {
         return <View style={styles.centerContainer}><ActivityIndicator size="large" /></View>;
     }
 
-    if (error) {
-        return <View style={styles.centerContainer}><Text>{error}</Text><Button onPress={fetchProfile}>Tentar Novamente</Button></View>;
+    if (!user) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text>Não foi possível carregar os dados do perfil.</Text>
+                <Button onPress={reloadUser}>Tentar Novamente</Button>
+            </View>
+        );
     }
 
-    const userInitial = userData?.nickname?.charAt(0).toUpperCase() || '';
+    const userInitial = user.nickname?.charAt(0).toUpperCase() || '';
 
     return (
         <ScrollView style={styles.container}>
@@ -67,21 +39,20 @@ const ProfileScreen = ({ navigation }) => {
                 <Card.Content>
                     <View style={styles.summaryTopRow}>
                         <Avatar.Text size={80} label={userInitial} style={styles.avatar} labelStyle={styles.avatarLabel} />
-
                         <View style={styles.summaryTextContainer}>
-                            <Text variant="headlineSmall" style={styles.name}>{userData?.name}</Text>
-                            <Text style={styles.memberSince}>Membro desde {new Date(userData?.createdAt).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</Text>
+                            <Text variant="headlineSmall" style={styles.name}>{user.name}</Text>
+                            <Text style={styles.memberSince}>Membro desde {new Date(user.createdAt).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</Text>
                         </View>
                     </View>
 
                     <View style={styles.chipsContainer}>
-                        <Chip icon="star" style={styles.chip}>{userData?.totalPoints} pontos</Chip>
+                        <Chip icon="star" style={styles.chip}>{user.totalPoints} pontos</Chip>
                         <Chip icon="check-all" style={styles.chip}>-- atividades</Chip>
                     </View>
 
                     <Button
                         mode="outlined"
-                        onPress={() => { }}
+                        onPress={() => navigation.navigate('EditProfile', { user: user })}
                         style={styles.editButton}
                         labelStyle={styles.editButtonLabel}
                         icon="pencil-outline"
@@ -95,18 +66,10 @@ const ProfileScreen = ({ navigation }) => {
                 <Card.Content>
                     <Text variant="titleLarge" style={styles.sectionTitle}>Informações Pessoais</Text>
                     <View style={styles.infoGridContainer}>
-                        <View style={styles.infoFieldWrapper}>
-                            <InfoField label="Nome Completo" value={userData?.name} />
-                        </View>
-                        <View style={styles.infoFieldWrapper}>
-                            <InfoField label="E-mail" value={userData?.email} />
-                        </View>
-                        <View style={styles.infoFieldWrapper}>
-                            <InfoField label="Telefone" value={userData?.phone || 'Não informado'} />
-                        </View>
-                        <View style={styles.infoFieldWrapper}>
-                            <InfoField label="Endereço" value={userData?.address || 'Não informado'} />
-                        </View>
+                        <View style={styles.infoFieldWrapper}><InfoField label="Nome Completo" value={user.name} /></View>
+                        <View style={styles.infoFieldWrapper}><InfoField label="E-mail" value={user.email} /></View>
+                        <View style={styles.infoFieldWrapper}><InfoField label="Telefone" value={user.phone || 'Não informado'} /></View>
+                        <View style={styles.infoFieldWrapper}><InfoField label="Endereço" value={user.address || 'Não informado'} /></View>
                     </View>
                 </Card.Content>
             </Card>
@@ -142,7 +105,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     avatar: {
-        backgroundColor: '#3D8B6D', 
+        backgroundColor: '#3D8B6D',
     },
     avatarLabel: {
         fontSize: 40,
@@ -181,11 +144,11 @@ const styles = StyleSheet.create({
     infoGridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginHorizontal: -8, 
+        marginHorizontal: -8,
     },
     infoFieldWrapper: {
-        width: '50%', 
-        padding: 8, 
+        width: '50%',
+        padding: 8,
     },
     logoutContainer: {
         paddingHorizontal: 16,
