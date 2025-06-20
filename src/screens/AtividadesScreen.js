@@ -1,6 +1,4 @@
-// src/screens/AtividadesScreen.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; 
 import { View, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Text, Searchbar, Button } from 'react-native-paper';
 import { useIsFocused } from '@react-navigation/native';
@@ -10,17 +8,13 @@ import { getAvailableActivities, enrollInActivity } from '../services/activitySe
 const AtividadesScreen = ({ navigation }) => {
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Estados para controlar os dados da API
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Estado para guardar os IDs das atividades em que o usuário se inscreveu na sessão atual
     const [enrolledActivityIds, setEnrolledActivityIds] = useState([]);
 
     const isFocused = useIsFocused();
 
-    // Função para buscar os dados da API
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -34,58 +28,52 @@ const AtividadesScreen = ({ navigation }) => {
         }
     };
 
-    // Busca os dados sempre que a tela entra em foco
     useEffect(() => {
         if (isFocused) {
             fetchData();
         }
     }, [isFocused]);
 
+    const filteredActivities = useMemo(() => {
+        if (!searchQuery) {
+            return activities;
+        }
+        return activities.filter((activity) =>
+            activity.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [activities, searchQuery]); 
+
     const handleParticipar = async (activity) => {
         try {
-            // Chama a API para se inscrever
             await enrollInActivity(activity.id);
             Alert.alert('Sucesso!', `Você se inscreveu na atividade "${activity.title}".`);
-
-            // Adiciona o ID da atividade à nossa lista local para desabilitar o botão
             setEnrolledActivityIds(prevIds => [...prevIds, activity.id]);
-
         } catch (error) {
-            // A API retorna uma mensagem de erro se o usuário já está inscrito
             const errorMessage = error.response?.data || 'Não foi possível se inscrever. Tente novamente.';
             Alert.alert('Erro', errorMessage);
         }
     };
 
     if (isLoading) {
-        return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator animating={true} size="large" />
-            </View>
-        );
+        return <View style={styles.centerContainer}><ActivityIndicator animating={true} size="large" /></View>;
     }
 
     if (error) {
-        return (
-            <View style={styles.centerContainer}>
-                <Text>{error}</Text>
-                <Button onPress={fetchData} style={{ marginTop: 10 }}>Tentar Novamente</Button>
-            </View>
-        );
+        return <View style={styles.centerContainer}><Text>{error}</Text><Button onPress={fetchData} style={{ marginTop: 10 }}>Tentar Novamente</Button></View>;
     }
 
     return (
         <View style={styles.container}>
             <Text variant="titleLarge" style={styles.title}>Atividades Disponíveis</Text>
             <Searchbar
-                placeholder="Pesquisar"
+                placeholder="Pesquisar por título..."
                 onChangeText={setSearchQuery}
                 value={searchQuery}
                 style={styles.searchbar}
             />
 
             <FlatList
-                data={activities}
+                data={filteredActivities}
                 renderItem={({ item }) => (
                     <ActivityCard
                         activity={item}
@@ -94,7 +82,7 @@ const AtividadesScreen = ({ navigation }) => {
                     />
                 )}
                 keyExtractor={item => item.id.toString()}
-                ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma atividade disponível no momento.</Text>}
+                ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma atividade encontrada.</Text>}
                 contentContainerStyle={styles.list}
             />
         </View>
