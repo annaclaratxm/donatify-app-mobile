@@ -6,6 +6,7 @@ import { Text } from 'react-native-paper';
 import AdminTabNavigator from './AdminTabNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen'; 
+import ActivityEditScreen from '../screens/ActivityEditScreen';
 import ProfileAvatar from '../components/ProfileAvatar'; 
 
 const Stack = createNativeStackNavigator();
@@ -34,6 +35,7 @@ const AdminNavigator = () => {
                 />
                 <Stack.Screen name="Perfil" component={ProfileScreen} />
                 <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Editar Perfil' }}/>
+                 <Stack.Screen name="ActivityEdit" component={ActivityEditScreen} />
             </Stack.Group>
         </Stack.Navigator>
     );
