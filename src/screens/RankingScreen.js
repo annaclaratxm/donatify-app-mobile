@@ -18,6 +18,7 @@ const RankingScreen = () => {
             setIsLoading(true);
             setError(null);
             const data = await getRankingList();
+            console.log('Dados do ranking:', data); // Log dos dados recebidos
             setRankingData(data);
         } catch (e) {
             setError('Não foi possível carregar o ranking.');
@@ -66,7 +67,7 @@ const RankingScreen = () => {
                 renderItem={({ item }) => (
                     <RankingItem
                         rank={item.rank}
-                        name={item.name}
+                        name={item.nickname}
                         points={item.totalPoints.toString()} 
                     />
                 )}

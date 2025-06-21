@@ -4,12 +4,22 @@ import { Text, Button, Card, IconButton, Modal, Portal, TextInput, ActivityIndic
 import { useIsFocused } from '@react-navigation/native';
 import { getAllUsers, updateUserByAdmin, deleteUserByAdmin } from '../services/adminService';
 
+const roles = [
+    { label: 'Administrador', value: 'ADMIN' },
+    { label: 'Usuário', value: 'USER' },
+];
+
+const getRoleLabel = (value) => {
+    const found = roles.find(r => r.value === value);
+    return found ? found.label : value;
+};
+
 const UserItem = ({ item, onEdit, onDelete }) => (
     <Card style={styles.itemCard}>
         <Card.Title
-            title={item.name}
+            title={item.nickname}
             subtitle={item.email}
-            right={() => <Chip style={styles.chip}>{item.role}</Chip>}
+            right={() => <Chip style={styles.chip}>{getRoleLabel(item.role)}</Chip>}
         />
         <Card.Actions>
             <IconButton icon="account-edit" iconColor="#3D8B6D" onPress={() => onEdit(item)} />
@@ -27,10 +37,6 @@ const UserForm = ({ initialData, onSave, onCancel, isLoading }) => {
     
     const handleSave = () => {
         const finalOngId = ongId.trim() === '' ? null : parseInt(ongId, 10);
-        if (isNaN(finalOngId) && ongId.trim() !== '') {
-            Alert.alert('Erro', 'ID da ONG deve ser um número.');
-            return;
-        }
         const userData = { name, nickname, email, role, ongId: finalOngId };
         onSave(userData);
     };
@@ -45,7 +51,6 @@ const UserForm = ({ initialData, onSave, onCancel, isLoading }) => {
                     <TextInput label="Email" value={email} onChangeText={setEmail} mode="outlined" style={styles.input} keyboardType="email-address" />
                     <Text style={styles.label}>Perfil (Role)</Text>
                     <SegmentedButtons value={role} onValueChange={setRole} style={styles.input} buttons={[{ value: 'USER', label: 'Usuário' }, { value: 'ADMIN', label: 'Admin' }]} />
-                    <TextInput label="ID da ONG (Opcional)" value={ongId} onChangeText={setOngId} mode="outlined" style={styles.input} keyboardType="numeric" />
                 </Card.Content>
             </ScrollView>
             <Card.Actions>

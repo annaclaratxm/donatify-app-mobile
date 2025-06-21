@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Text, Chip, Button, Icon } from 'react-native-paper';
 
-const ActivityCard = ({ activity, onParticipar, isEnrolled }) => {
+const ActivityCard = ({ activity, onParticipar, enrollmentInfo, onPress }) => {
     const categoryColor = activity.type === 'donation' ? '#A020F0' : '#2979FF'; 
     const categoryLabel = activity.type === 'donation' ? 'doação' : activity.type; 
 
@@ -11,19 +11,24 @@ const ActivityCard = ({ activity, onParticipar, isEnrolled }) => {
     const formattedStartDate = new Date(activity.startDate).toLocaleDateString('pt-BR');
     const formattedStartTime = new Date(activity.startDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const formattedEndTime = new Date(activity.endDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    // Verifica se o usuário está inscrito e o status da inscrição
+    const isEnrolled = !!enrollmentInfo;
+    const enrollmentStatus = enrollmentInfo?.status;
 
 
     return (
-        <Card style={styles.card}>
-            <View style={styles.topRow}>
-                <Chip style={[styles.chip, { backgroundColor: categoryColor }]} textStyle={styles.chipText}>{categoryLabel}</Chip>
-                <View style={styles.statusRow}>
-                    <Icon source="check-circle" color="#34C759" size={16} />
-                    <Chip style={[styles.chip, styles.activeChip]} textStyle={[styles.chipText, styles.activeChipText]}>
-                        {activity.status}
-                    </Chip>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+            <Card style={styles.card}>
+                <View style={styles.topRow}>
+                    <Chip style={[styles.chip, { backgroundColor: categoryColor }]} textStyle={styles.chipText}>{categoryLabel}</Chip>
+                    <View style={styles.statusRow}>
+                        <Icon source="check-circle" color="#34C759" size={16} />
+                        <Chip style={[styles.chip, styles.activeChip]} textStyle={[styles.chipText, styles.activeChipText]}>
+                            {activity.status}
+                        </Chip>
+                    </View>
                 </View>
-            </View>
 
             <Card.Content style={styles.content}>
                 <Text variant="titleLarge" style={styles.title}>{activity.title}</Text>
@@ -49,18 +54,39 @@ const ActivityCard = ({ activity, onParticipar, isEnrolled }) => {
             </Card.Content>
 
             <Card.Actions>
-                <Button
-                    mode="contained"
-                    onPress={onParticipar}
-                    disabled={isEnrolled}
-                    style={[styles.button, isEnrolled && styles.disabledButton]}
-                    labelStyle={styles.buttonLabel}
-                    icon={isEnrolled ? 'check' : null} 
-                >
-                    {isEnrolled ? 'Inscrito' : 'Participar'}
-                </Button>
+                {!isEnrolled ? (
+                    <Button
+                        mode="contained"
+                        onPress={onParticipar}
+                        style={styles.button}
+                        labelStyle={styles.buttonLabel}
+                    >
+                        Participar
+                    </Button>
+                ) : enrollmentStatus === 'COMPLETED' ? (
+                    <Button
+                        mode="contained"
+                        disabled
+                        style={[styles.button, styles.completedButton]}
+                        labelStyle={styles.buttonLabel}
+                        icon="check-circle"
+                    >
+                        Concluída
+                    </Button>
+                ) : (
+                    <Button
+                        mode="contained"
+                        disabled
+                        style={[styles.button, styles.disabledButton]}
+                        labelStyle={styles.buttonLabel}
+                        icon="clock"
+                    >
+                        Inscrito
+                    </Button>
+                )}
             </Card.Actions>
         </Card>
+        </TouchableOpacity>
     );
 };
 
@@ -139,6 +165,9 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         backgroundColor: '#A5D6A7', 
+    },
+    completedButton: {
+        backgroundColor: '#3D8B6D', 
     },
     buttonLabel: {
         fontWeight: 'bold',

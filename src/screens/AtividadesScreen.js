@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-nati
 import { Text, Searchbar, Button } from 'react-native-paper';
 import { useIsFocused } from '@react-navigation/native';
 import ActivityCard from '../components/ActivityCard';
-import { getAvailableActivities, enrollInActivity } from '../services/activityService';
+import { getAvailableActivities, enrollInActivity, getUserActivityEnrollments } from '../services/activityService';
 
 const AtividadesScreen = ({ navigation }) => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -11,7 +11,7 @@ const AtividadesScreen = ({ navigation }) => {
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [enrolledActivityIds, setEnrolledActivityIds] = useState([]);
+    const [enrollments, setEnrollments] = useState({});
 
     const isFocused = useIsFocused();
 
@@ -19,10 +19,29 @@ const AtividadesScreen = ({ navigation }) => {
         try {
             setIsLoading(true);
             setError(null);
-            const data = await getAvailableActivities();
-            setActivities(data);
+            
+            // Carrega as atividades primeiro
+            try {
+                const activitiesData = await getAvailableActivities();
+                setActivities(activitiesData);
+            } catch (activitiesError) {
+                console.error('Erro ao carregar atividades:', activitiesError);
+                setError('Não foi possível carregar as atividades.');
+                return; // Não continua se não conseguir carregar as atividades
+            }
+            
+            // Tenta carregar as inscrições do usuário separadamente
+            try {
+                const enrollmentsData = await getUserActivityEnrollments();
+                setEnrollments(enrollmentsData);
+            } catch (enrollmentsError) {
+                console.error('Erro ao carregar inscrições:', enrollmentsError);
+                // Não mostra erro para o usuário, apenas usa um objeto vazio para as inscrições
+                setEnrollments({});
+            }
         } catch (e) {
-            setError('Não foi possível carregar as atividades.');
+            console.error('Erro inesperado ao carregar dados:', e);
+            setError('Ocorreu um erro inesperado.');
         } finally {
             setIsLoading(false);
         }
@@ -45,12 +64,31 @@ const AtividadesScreen = ({ navigation }) => {
 
     const handleParticipar = async (activity) => {
         try {
-            await enrollInActivity(activity.id);
+            const response = await enrollInActivity(activity.id);
             Alert.alert('Sucesso!', `Você se inscreveu na atividade "${activity.title}".`);
-            setEnrolledActivityIds(prevIds => [...prevIds, activity.id]);
+            
+            // Atualiza o estado de inscrições com a nova inscrição
+            setEnrollments(prev => ({
+                ...prev,
+                [activity.id]: {
+                    status: 'ENROLLED',
+                    enrollmentId: response.enrollmentId
+                }
+            }));
         } catch (error) {
-            const errorMessage = error.response?.data || 'Não foi possível se inscrever. Tente novamente.';
-            Alert.alert('Erro', errorMessage);
+            // Se for um erro de autenticação, podemos informar ao usuário
+            if (error.response && error.response.status === 401) {
+                Alert.alert(
+                    'Autenticação necessária', 
+                    'Você precisa estar logado para se inscrever em atividades.',
+                    [
+                        { text: 'OK' }
+                    ]
+                );
+            } else {
+                const errorMessage = error.response?.data || 'Não foi possível se inscrever. Tente novamente.';
+                Alert.alert('Erro', errorMessage);
+            }
         }
     };
 
@@ -78,7 +116,8 @@ const AtividadesScreen = ({ navigation }) => {
                     <ActivityCard
                         activity={item}
                         onParticipar={() => handleParticipar(item)}
-                        isEnrolled={enrolledActivityIds.includes(item.id)}
+                        enrollmentInfo={enrollments[item.id]}
+                        onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
                     />
                 )}
                 keyExtractor={item => item.id.toString()}
