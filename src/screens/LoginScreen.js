@@ -74,7 +74,7 @@ const LoginScreen = ({ navigation }) => {
                 />
 
                 <TouchableOpacity onPress={() => console.log('Clicou em Esqueceu a senha')} disabled={isLoading}>
-                    <Text style={styles.forgotPassword}>Esqueveu sua senha?</Text>
+                    <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
                 </TouchableOpacity>
 
                 <Button

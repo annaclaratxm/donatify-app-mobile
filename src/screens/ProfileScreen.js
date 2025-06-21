@@ -47,7 +47,7 @@ const ProfileScreen = ({ navigation }) => {
 
                     <View style={styles.chipsContainer}>
                         <Chip icon="star" style={styles.chip}>{user.totalPoints} pontos</Chip>
-                        <Chip icon="check-all" style={styles.chip}>-- atividades</Chip>
+                        <Chip icon="check-all" style={styles.chip}>{user.completedActivities || 0} atividades</Chip>
                     </View>
 
                     <Button

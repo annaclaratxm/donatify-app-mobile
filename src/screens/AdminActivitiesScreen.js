@@ -4,11 +4,22 @@ import { Text, Button, Card, IconButton } from 'react-native-paper';
 import { useIsFocused } from '@react-navigation/native';
 import { getAllActivities, deleteActivity } from '../services/adminService';
 
+const status = [
+    { label: 'Ativo', value: 'active' },
+    { label: 'Concluída', value: 'completed' },
+    { label: 'Cancelada', value: 'canceled' },
+];
+
+const getStatusLabel = (value) => {
+    const found = status.find(s => s.value === value);
+    return found ? found.label : value;
+};
+
 const ActivityItem = ({ item, onEdit, onDelete }) => (
     <Card style={styles.itemCard}>
         <Card.Title
             title={item.title}
-            subtitle={`Pontos: ${item.pointsValue} | Status: ${item.status?.toLowerCase()}`}
+            subtitle={`Pontos: ${item.pointsValue} | Status: ${getStatusLabel(item.status)}`}
             titleStyle={styles.cardTitle}
         />
         <Card.Actions>
@@ -42,6 +53,9 @@ const AdminActivitiesScreen = ({ navigation }) => {
     }, [isFocused]);
 
     const handleEdit = (activity) => {
+        console.log('Enviando atividade para edição:', activity);
+        console.log('Tipo da atividade:', activity.type);
+        console.log('Status da atividade:', activity.status);
         navigation.navigate('ActivityEdit', { activity: activity });
     };
 
